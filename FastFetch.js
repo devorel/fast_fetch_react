@@ -23,7 +23,9 @@ function FastFetch(url, options, expiration) {
 
             }
         }
-
+        url = new URL(url);
+        url.searchParams.append('t', time);
+        url = url.toString()
         fetch(url, options)
             .then(res => res.json())
             .then(data => {
