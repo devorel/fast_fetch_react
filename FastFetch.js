@@ -1,15 +1,19 @@
 import React, {useEffect, useState} from 'react';
 
-function FastFetch(url, options, expiration) {
+function FastFetch({url, options, expiration, page}) {
 
     const [data, setData] = useState(null);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
 
+    function setResponse(response) {
+        setData({...data, ...response});
+    }
+
     function addTime(url) {
-        url = new URL(url);
-        url.searchParams.append('t', (new Date()).getTime());
-        return url.toString();
+        let url1 = new URL(url);
+        url1.searchParams.set('t', (new Date()).getTime());
+        return url1.toString();
     }
 
     useEffect(() => {
@@ -20,39 +24,40 @@ function FastFetch(url, options, expiration) {
         expiration = expiration || 0;
         setLoading(true);
 
+        if (page) {
+            let url1 = new URL(url);
+            url1.searchParams.set('page', page);
+            url = url1.toString();
+        }
+
         if (expiration && window.localStorage.getItem(url) != null) {
-            // if (expiration && window.sessionStorage.getItem(url.toString()) != null) {
-            // let data = JSON.parse(window.sessionStorage.getItem(url.toString()));
-            let data = JSON.parse(window.localStorage.getItem(url));
-            if (time < (data.timestamp + expiration)) {
-                setData(data.data);
+            let dataStorage = JSON.parse(window.localStorage.getItem(url));
+            if (time < (dataStorage.timestamp + expiration)) {
+                setResponse(dataStorage.data);
                 setError(null);
                 setLoading(false);
                 return
-
             }
         }
 
         fetch(addTime(url), options)
             .then(res => res.json())
-            .then(data => {
-                setData(data);
-                setLoading(false);
+            .then(json => {
                 if (expiration) {
-                    // window.sessionStorage.setItem(url, JSON.stringify({timestamp: time, data: data}));
-                    window.localStorage.setItem(url, JSON.stringify({timestamp: time, data: data}));
+                    window.localStorage.setItem(url, JSON.stringify({timestamp: time, data: json}));
                 }
+                setResponse(json);
+                setLoading(false);
                 setError(null);
-
             })
             .catch((error) => {
                 setError(error);
                 // setData(null);
 
             });
-    }, [url]);
+    }, [url, page]);
 
-    return [loading, error, data]
+    return [loading, error, data];
 }
 
 export default FastFetch;
