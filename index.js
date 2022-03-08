@@ -1,2 +1,2 @@
-import FastFetch from "./FastFetch"
+import FastFetch from "./src/FastFetch"
 export default FastFetch
